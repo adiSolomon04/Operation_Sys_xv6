@@ -89,3 +89,11 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_getpinfo(void)
+{
+  //if(pidnum<3)
+  //	return getpinfo(pidnum)->pid;
+  return getpinfo();
+}

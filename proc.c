@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -63,6 +64,22 @@ myproc(void) {
   p = c->proc;
   popcli();
   return p;
+}
+
+int
+getpinfo(void) 
+{
+  struct proc* p;
+  acquire(&ptable.lock);
+  int i=0;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state != UNUSED){
+    	cprintf("%d\t%d\t%s\n", i, p->pid, p->name);
+    	i++;
+    	}
+  }
+  release(&ptable.lock);
+  return 0;
 }
 
 //PAGEBREAK: 32
