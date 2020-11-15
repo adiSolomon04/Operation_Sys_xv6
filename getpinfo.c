@@ -5,5 +5,5 @@
 int main(void)
 {  
   getpinfo();
-  exit();
+  exit(0);
 }  	

@@ -4,5 +4,5 @@
 int main(void)
 {  
     printf(1, "HelloXV6\n");  
-    exit();
+    exit(0);
 }  

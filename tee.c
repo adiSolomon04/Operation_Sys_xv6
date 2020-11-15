@@ -16,12 +16,12 @@ n = read(fdRead, buf, sizeof(buf));
     int b = write(fdWrite2, buf, n);
     if ( a != n || b != n) {	
       printf(1, "tee: write error\n");
-      exit();
+      exit(0);
     }
   
   if(n < 0){
     printf(1, "tee: read error\n");
-    exit();
+    exit(0);
   }
 }
 void cat2(int fdRead,int fdWrite)
@@ -32,12 +32,12 @@ void cat2(int fdRead,int fdWrite)
     int a = write(fdWrite, buf, n);
     if ( a != n) {	
       printf(1, "tee: write error\n");
-      exit();
+      exit(0);
     }
   }
   if(n < 0){
     printf(1, "tee: read error\n");
-    exit();
+    exit(0);
   }
 }
 int main(int arg, char *argv[])
@@ -56,5 +56,5 @@ int main(int arg, char *argv[])
 	   int fdWrite = open(argv[2],O_WRONLY|O_CREATE);
 	   cat2(fdRead, fdWrite);
 	}
-	exit();
+	exit(0);
 }
