@@ -83,13 +83,7 @@ runcmd(struct cmd *cmd)
       exit(0);
     exec(ecmd->argv[0], ecmd->argv);
     int i;
-    int j;
     for(i=0; i<numPATH; i++){
-    	if(i==0)
-    		printf(1, "PATH is\n");
-    	for(j=0; j<strlen(PATH[i]); j++)
-    	    	printf(1, "%c", PATH[i][j]);
-    	printf(1, "\n");
     	int len = strlen(PATH[i])+strlen(ecmd->argv[0]);
     	char* res = (char *)malloc(sizeof(char)*len);
     	strcpy(res, PATH[i]);
