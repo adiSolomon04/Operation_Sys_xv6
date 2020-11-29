@@ -303,6 +303,7 @@ wait(int *status)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
+      	// if status is not  null - set process status.
       	if(status!=0)
       	  *status = p->status;
         // Found one.

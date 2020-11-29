@@ -81,9 +81,12 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
+      // execute on current folder
     exec(ecmd->argv[0], ecmd->argv);
     int i;
     for(i=0; i<numPATH; i++){
+    	//execute on each of the path folders. 
+    	//if fails - return and try the next one.
     	int len = strlen(PATH[i])+strlen(ecmd->argv[0]);
     	char* res = (char *)malloc(sizeof(char)*len);
     	strcpy(res, PATH[i]);
@@ -179,6 +182,7 @@ main(void)
         printf(2, "cannot cd %s\n", buf+3);
       continue;
     }
+    // adding paths to PATH variable.
     if(buf[0] == 's' && buf[1] == 'e' && buf[2] == 't' && buf[3] == ' ' && buf[4] == 'P' && buf[5] == 'A' && buf[6] == 'T' && buf[7] == 'H' && buf[8] == ' '){
        for (int l=0;l<10;l++){
 	memset(PATH[l], 0, sizeof PATH[l]);
@@ -207,6 +211,7 @@ main(void)
        numPATH=k;
      continue;
     }
+    // The command running using exec, if not cd and 'set PATH' commands
     if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait(0);
