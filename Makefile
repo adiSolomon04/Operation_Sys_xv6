@@ -184,6 +184,7 @@ UPROGS=\
 	_task1\
 	_getpinfo\
 	_tee\
+	_test_schedule\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -255,6 +256,7 @@ EXTRA=\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
 	task1.c getpinfo.c tee.c\
+	test_schedule.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 

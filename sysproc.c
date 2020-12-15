@@ -104,3 +104,21 @@ sys_getpinfo(void)
   //	return getpinfo(pidnum)->pid;
   return getpinfo();
 }
+
+int 
+sys_setpriority(void)
+{
+  int priority;
+  if(argint(0, &priority) < 0)
+    return -1;
+    
+  struct proc *curproc= myproc();
+  int oldp = curproc->priority;
+  if(priority>=0 && priority<=200){
+  	curproc->priority = priority;
+  	if(priority<oldp) //higer priority - call reschedule
+  		yield();
+  	return oldp;
+  }
+ return -1;
+}

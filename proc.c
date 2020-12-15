@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 struct {
   struct spinlock lock;
@@ -82,6 +83,7 @@ getpinfo(void)
   return 0;
 }
 
+
 //PAGEBREAK: 32
 // Look in the process table for an UNUSED proc.
 // If found, change state to EMBRYO and initialize
@@ -105,6 +107,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->priority = 50;
 
   release(&ptable.lock);
 
@@ -343,37 +346,54 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p;
-  struct cpu *c = mycpu();
-  c->proc = 0;
-  
-  for(;;){
-    // Enable interrupts on this processor.
-    sti();
+struct proc *p;
+    // ------start edit : 14.12.2020------
+    struct proc *p_find_high_Priority;
+    int highestPriority;
+    // ------ end edit -------------------
+    struct cpu *c = mycpu();
+    c->proc = 0;
 
-    // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+    for(;;){
+        // Enable interrupts on this processor.
+        sti();
+        // Loop over process table looking for process with highestPriority to run.
+		// ------start edit : 14.12.2020-----
+		// find the highest priority that exist in the process table
+		highestPriority = 200;
+		for(p_find_high_Priority = ptable.proc; p_find_high_Priority < &ptable.proc[NPROC]; p_find_high_Priority++) {
+			if (p_find_high_Priority->state != RUNNABLE)
+				continue;
+			if (highestPriority > p_find_high_Priority->priority)
+				highestPriority = p_find_high_Priority->priority;
+		}
+		// ------ end edit -------------------
+        acquire(&ptable.lock);
+			for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+            if((p->state !=  RUNNABLE)||(p->priority > highestPriority))
+                continue;
+			// ------start edit : 14.12.2020-----
+			if((p->state ==  RUNNABLE) && (p->priority < highestPriority)) // we found a more priortized process!
+				break;
+			// ------ end edit -------------------
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+            // Switch to chosen process.  It is the process's job
+            // to release ptable.lock and then reacquire it
+            // before jumping back to us.
+            c->proc = p;
+            switchuvm(p);
+            p->state = RUNNING;
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-    }
-    release(&ptable.lock);
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
 
-  }
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
+        }
+        release(&ptable.lock);
+     }
 }
 
 // Enter scheduler.  Must hold only ptable.lock
