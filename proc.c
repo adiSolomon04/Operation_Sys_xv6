@@ -346,54 +346,64 @@ wait(int *status)
 void
 scheduler(void)
 {
-struct proc *p;
-    // ------start edit : 14.12.2020------
-    struct proc *p_find_high_Priority;
-    int highestPriority;
-    // ------ end edit -------------------
-    struct cpu *c = mycpu();
-    c->proc = 0;
+  struct proc *p;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  
+  struct proc *RR = 0;
+  int highest_p;
+  struct proc *next_p;
+  
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+    highest_p = 200;
+    
+    // Loop over ptable to find the highest priority
+    acquire(&ptable.lock);
+    next_p = 0; //set as null until found.
+    
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      if(p->state == RUNNABLE)
+    	highest_p = MIN(highest_p, (p->priority));	
+    
+    // Loop over process table looking for the process with highest prio	rity to run.
+    // Save it as next.
+    
+    // first time running
+    if(RR==0)
+    	RR= ptable.proc;
+    	
+    for(p = RR; (p < &ptable.proc[NPROC]) && (next_p==0); p++)
+      if((p->state == RUNNABLE)&&(p->priority)==highest_p)
+      	next_p = p;
+      	
+    for(p = ptable.proc; (p<RR) && (next_p==0); p++)
+      if((p->state == RUNNABLE)&&(p->priority)==highest_p)
+      	next_p = p;
+    
+    // if proces was found
+    //set round robin pointer
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    if(next_p!=0){
+    	    RR = next_p;
+     	    RR++;
+	    c->proc = next_p;
+	    switchuvm(next_p);
+	    next_p->state = RUNNING;
 
-    for(;;){
-        // Enable interrupts on this processor.
-        sti();
-        // Loop over process table looking for process with highestPriority to run.
-		// ------start edit : 14.12.2020-----
-		// find the highest priority that exist in the process table
-		highestPriority = 200;
-		for(p_find_high_Priority = ptable.proc; p_find_high_Priority < &ptable.proc[NPROC]; p_find_high_Priority++) {
-			if (p_find_high_Priority->state != RUNNABLE)
-				continue;
-			if (highestPriority > p_find_high_Priority->priority)
-				highestPriority = p_find_high_Priority->priority;
-		}
-		// ------ end edit -------------------
-        acquire(&ptable.lock);
-			for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	    swtch(&(c->scheduler), next_p->context);
+	    switchkvm();
 
-            if((p->state !=  RUNNABLE)||(p->priority > highestPriority))
-                continue;
-			// ------start edit : 14.12.2020-----
-			if((p->state ==  RUNNABLE) && (p->priority < highestPriority)) // we found a more priortized process!
-				break;
-			// ------ end edit -------------------
+	    // Process is done running for now.
+	    // It should have changed its p->state before coming back.
+	    c->proc = 0;
+    }
+    release(&ptable.lock);
 
-            // Switch to chosen process.  It is the process's job
-            // to release ptable.lock and then reacquire it
-            // before jumping back to us.
-            c->proc = p;
-            switchuvm(p);
-            p->state = RUNNING;
-
-            swtch(&(c->scheduler), p->context);
-            switchkvm();
-
-            // Process is done running for now.
-            // It should have changed its p->state before coming back.
-            c->proc = 0;
-        }
-        release(&ptable.lock);
-     }
+  }
 }
 
 // Enter scheduler.  Must hold only ptable.lock
